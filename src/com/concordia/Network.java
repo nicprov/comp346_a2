@@ -6,6 +6,7 @@ package com.concordia;
  */
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 
 /** Network class
  *
