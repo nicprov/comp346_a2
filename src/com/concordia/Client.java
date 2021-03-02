@@ -135,7 +135,7 @@ public class Client extends Thread{
      * @return
      * @param
      */
-    public void sendTransactions() {
+    public void sendTransactions() throws InterruptedException {
         int i = 0;     /* index of transaction array */
         while (i < getNumberOfTransactions()) {
             if (Network.getInBufferStatus().equals("full"))
@@ -155,7 +155,7 @@ public class Client extends Thread{
      * @return
      * @param transact
      */
-    public void receiveTransactions(Transactions transact) {
+    public void receiveTransactions(Transactions transact) throws InterruptedException {
         int i = 0;     /* Index of transaction array */
         while (i < getNumberOfTransactions()) {
             if (Network.getOutBufferStatus().equals("empty"))
@@ -188,12 +188,20 @@ public class Client extends Thread{
         long sendClientStartTime, receiveClientStartTime;
         if (clientOperation.equals("sending")) {
             sendClientStartTime = System.currentTimeMillis();
-            sendTransactions();
+            try {
+                sendTransactions();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             System.out.println("\n Terminating client send thread - " + " Running time " + (System.currentTimeMillis() - sendClientStartTime) + " milliseconds");
         }
         else {
             receiveClientStartTime = System.currentTimeMillis();
-            receiveTransactions(new Transactions());
+            try {
+                receiveTransactions(new Transactions());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             System.out.println("\n Terminating client receive thread - " + " Running time " + (System.currentTimeMillis() - receiveClientStartTime) + " milliseconds");
         }
         if (Network.getInBufferStatus().equals("empty") && Network.getOutBufferStatus().equals("empty"))
