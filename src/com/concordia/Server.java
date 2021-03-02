@@ -19,6 +19,7 @@ import java.util.InputMismatchException;
 
 public class Server extends Thread {
 
+    /* NEW : Shared member variables are now static for the 2 receiving threads */
     private static int numberOfTransactions;         	/* Number of transactions handled by the server */
     private static int numberOfAccounts;             	/* Number of accounts stored in the server */
     private static int maxNbAccounts;                		/* maximum number of transactions */
@@ -113,6 +114,16 @@ public class Server extends Thread {
     }
 
     /**
+     * Mutator method of Server class
+     *
+     * @return
+     * @param nbOfAcc
+     */
+    public void setMaxNbAccounts(int nbOfAcc) {
+        maxNbAccounts = nbOfAcc;
+    }
+
+    /**
      * Accessor method of Server class
      *
      * @return serverThreadId
@@ -135,13 +146,27 @@ public class Server extends Thread {
     }
 
     /**
-     * Mutator method of Server class
-     *
-     * @return
-     * @param nbOfAcc
+     * Set the server thread status
+     * @param status
+     * @param serverThreadId
      */
-    public void setMaxNbAccounts(int nbOfAcc) {
-        maxNbAccounts = nbOfAcc;
+    public void setServerThreadStatus(String status, String serverThreadId){
+        if (serverThreadId.equals("Thread1"))
+            serverThreadRunningStatus1 = status;
+        else
+            serverThreadRunningStatus2 = status;
+    }
+
+    /**
+     * Get the server thread status
+     * @param serverThreadId
+     * @return
+     */
+    public String getServerThreadStatus(String serverThreadId){
+        if (serverThreadId.equals("Thread1"))
+            return serverThreadRunningStatus1;
+        else
+            return serverThreadRunningStatus2;
     }
 
     /**
@@ -211,11 +236,11 @@ public class Server extends Thread {
 
         /* Process the accounts until the client disconnects */
         while ((!Network.getClientConnectionStatus().equals("disconnected"))) {
-            if (Network.getInBufferStatus().equals("empty")) {
+            while (Network.getInBufferStatus().equals("empty") && !Network.getClientConnectionStatus().equals("disconnected")) {
                 setServerThreadStatus("idle", serverThreadId);
                 Thread.yield();
             }
-            else {
+            if (!Network.getInBufferStatus().equals("empty")) {
                 setServerThreadStatus("running", serverThreadId);
                 System.out.println("\n DEBUG : Server.processTransactions() - transferring in account " + trans.getAccountNumber());
                 Network.transferIn(trans);                              /* Transfer a transaction from the network input buffer */
@@ -319,7 +344,7 @@ public class Server extends Thread {
         return ("\n server IP " + Network.getServerIP() + "connection status " + Network.getServerConnectionStatus() + "Number of accounts " + getNumberOfAccounts());
     }
 
-    /**
+    /**Terminating server
      * Code for the run method
      *
      * @return
@@ -337,7 +362,7 @@ public class Server extends Thread {
                 e.printStackTrace();
             }
             setServerThreadStatus("terminated", serverThreadId);
-            System.out.println("\n Terminating server thread - " + " Running time " + (System.currentTimeMillis() - serverThread1StartTime) + " milliseconds");
+            System.out.println("\n Terminating server thread1 - " + " Running time " + (System.currentTimeMillis() - serverThread1StartTime) + " milliseconds");
         }
         else {
             serverThread2StartTime = System.currentTimeMillis();
@@ -355,29 +380,5 @@ public class Server extends Thread {
             Network.disconnect(Network.getServerIP());
             System.out.println("\n Disconnecting server from network");
         }
-    }
-
-    /**
-     * Set the server thread status
-     * @param status
-     * @param serverThreadId
-     */
-    public void setServerThreadStatus(String status, String serverThreadId){
-        if (serverThreadId.equals("Thread1"))
-            serverThreadRunningStatus1 = status;
-        else
-            serverThreadRunningStatus2 = status;
-    }
-
-    /**
-     * Get the server thread status
-     * @param serverThreadId
-     * @return
-     */
-    public String getServerThreadStatus(String serverThreadId){
-        if (serverThreadId.equals("Thread1"))
-            return serverThreadRunningStatus1;
-        else
-            return serverThreadRunningStatus2;
     }
 }
