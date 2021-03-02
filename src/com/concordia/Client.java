@@ -21,7 +21,6 @@ public class Client extends Thread{
     private static int numberOfTransactions;   		/* Number of transactions to process */
     private static int maxNbTransactions;      		/* Maximum number of transactions */
     private static Transactions[] transaction; 	/* Transactions to be processed */
-    private static Network Network;          	/* Client object to handle network operations */
     private String clientOperation;    				/* sending or receiving */
 
     /** Constructor method of Client class
@@ -125,7 +124,7 @@ public class Client extends Thread{
             }
         }
         setNumberOfTransactions(i);		/* Record the number of transactions processed */
-        System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
+        //System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
         inputStream.close( );
     }
 
@@ -142,7 +141,7 @@ public class Client extends Thread{
                 Thread.yield();
             else {
                 transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
-                System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
+                //System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
                 Network.send(transaction[i]);                            /* Transmit current transaction */
                 i++;
             }
@@ -162,7 +161,7 @@ public class Client extends Thread{
                 Thread.yield();
             else {
                 Network.receive(transact);                               	/* Receive updated transaction from the network buffer */
-                System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
+                //System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
                 System.out.println(transact);                               	/* Display updated transaction */
                 i++;
             }
