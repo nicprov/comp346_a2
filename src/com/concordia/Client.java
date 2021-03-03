@@ -22,6 +22,9 @@ public class Client extends Thread{
     private static int maxNbTransactions;      		/* Maximum number of transactions */
     private static Transactions[] transaction; 	/* Transactions to be processed */
     private String clientOperation;    				/* sending or receiving */
+    private String serverThreadId;				 /* Identification of the two server threads - Receiving, Sending */
+    private static String serverThreadRunningStatusSending;	 /* Running status of thread sending - idle, running, terminated */
+    private static String serverThreadRunningStatusReceiving;	 /* Running status of thread receiving - idle, running, terminated */
 
     /** Constructor method of Client class
      *
@@ -32,6 +35,7 @@ public class Client extends Thread{
     {
         if (operation.equals("sending"))
         {
+            serverThreadId = "sending";
             System.out.println("\n Initializing client sending application ...");
             numberOfTransactions = 0;
             maxNbTransactions = 100;
@@ -49,6 +53,7 @@ public class Client extends Thread{
         else
         if (operation.equals("receiving"))
         {
+            serverThreadId = "receiving";
             System.out.println("\n Initializing client receiving application ...");
             clientOperation = operation;
         }
@@ -95,6 +100,30 @@ public class Client extends Thread{
     }
 
     /**
+     * Set the server thread status
+     * @param status
+     * @param serverThreadId
+     */
+    public void setClientThreadStatus(String status, String serverThreadId){
+        if (serverThreadId.equals("sending"))
+            serverThreadRunningStatusSending = status;
+        else
+            serverThreadRunningStatusReceiving  = status;
+    }
+
+    /**
+     * Get the server thread status
+     * @param serverThreadId
+     * @return
+     */
+    public String getClientThreadStatus(String serverThreadId){
+        if (serverThreadId.equals("sending"))
+            return serverThreadRunningStatusSending;
+        else
+            return serverThreadRunningStatusReceiving;
+    }
+
+    /**
      * Reading of the transactions from an input file
      *
      * @return
@@ -124,7 +153,7 @@ public class Client extends Thread{
             }
         }
         setNumberOfTransactions(i);		/* Record the number of transactions processed */
-        //System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
+        System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
         inputStream.close( );
     }
 
@@ -137,14 +166,12 @@ public class Client extends Thread{
     public void sendTransactions() throws InterruptedException {
         int i = 0;     /* index of transaction array */
         while (i < getNumberOfTransactions()) {
-            if (Network.getInBufferStatus().equals("full"))
+            while (Network.getInBufferStatus().equals("full"))
                 Thread.yield();
-            else {
-                transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
-                //System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
-                Network.send(transaction[i]);                            /* Transmit current transaction */
-                i++;
-            }
+            transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
+            System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
+            Network.send(transaction[i]);                            /* Transmit current transaction */
+            i++;
         }
     }
 
@@ -156,15 +183,14 @@ public class Client extends Thread{
      */
     public void receiveTransactions(Transactions transact) throws InterruptedException {
         int i = 0;     /* Index of transaction array */
+        boolean test = false;
         while (i < getNumberOfTransactions()) {
-            if (Network.getOutBufferStatus().equals("empty"))
+            while (Network.getOutBufferStatus().equals("empty"))
                 Thread.yield();
-            else {
-                Network.receive(transact);                               	/* Receive updated transaction from the network buffer */
-                //System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
-                System.out.println(transact);                               	/* Display updated transaction */
-                i++;
-            }
+            Network.receive(transact);                               	/* Receive updated transaction from the network buffer */
+            System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
+            System.out.println(transact + " | Out: " + Network.getOutBufferStatus() + " | In: " + Network.getInBufferStatus() + " | #" + i + " | Total:" + getNumberOfTransactions());                               	/* Display updated transaction */
+            i++;
         }
     }
 
@@ -187,23 +213,27 @@ public class Client extends Thread{
         long sendClientStartTime, receiveClientStartTime;
         if (clientOperation.equals("sending")) {
             sendClientStartTime = System.currentTimeMillis();
+            setClientThreadStatus("running", "sending");
             try {
                 sendTransactions();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            setClientThreadStatus("terminated", "sending");
             System.out.println("\n Terminating client send thread - " + " Running time " + (System.currentTimeMillis() - sendClientStartTime) + " milliseconds");
         }
         else {
             receiveClientStartTime = System.currentTimeMillis();
+            setClientThreadStatus("running", "receiving");
             try {
                 receiveTransactions(new Transactions());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            setClientThreadStatus("terminated", "receiving");
             System.out.println("\n Terminating client receive thread - " + " Running time " + (System.currentTimeMillis() - receiveClientStartTime) + " milliseconds");
         }
-        if (Network.getInBufferStatus().equals("empty") && Network.getOutBufferStatus().equals("empty"))
+        if (getClientThreadStatus("receiving").equals("terminated") && getClientThreadStatus("sending").equals("terminated"))
             Network.disconnect(Network.getClientIP());
     }
 }
