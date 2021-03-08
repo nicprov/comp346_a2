@@ -4,6 +4,7 @@ import java.util.Scanner;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.InputMismatchException;
+import java.util.concurrent.Semaphore;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -153,7 +154,7 @@ public class Client extends Thread{
             }
         }
         setNumberOfTransactions(i);		/* Record the number of transactions processed */
-        System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
+        //System.out.println("\n DEBUG : Client.readTransactions() - " + getNumberOfTransactions() + " transactions processed");
         inputStream.close( );
     }
 
@@ -166,10 +167,8 @@ public class Client extends Thread{
     public void sendTransactions() throws InterruptedException {
         int i = 0;     /* index of transaction array */
         while (i < getNumberOfTransactions()) {
-            while (Network.getInBufferStatus().equals("full"))
-                Thread.yield();
             transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
-            System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
+            //System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
             Network.send(transaction[i]);                            /* Transmit current transaction */
             i++;
         }
@@ -185,11 +184,9 @@ public class Client extends Thread{
         int i = 0;     /* Index of transaction array */
         boolean test = false;
         while (i < getNumberOfTransactions()) {
-            while (Network.getOutBufferStatus().equals("empty"))
-                Thread.yield();
             Network.receive(transact);                               	/* Receive updated transaction from the network buffer */
-            System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
-            System.out.println(transact + " | Out: " + Network.getOutBufferStatus() + " | In: " + Network.getInBufferStatus() + " | #" + i + " | Total:" + getNumberOfTransactions());                               	/* Display updated transaction */
+            //System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
+            System.out.println(transact);                               	/* Display updated transaction */
             i++;
         }
     }

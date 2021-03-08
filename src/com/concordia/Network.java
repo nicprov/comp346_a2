@@ -25,9 +25,7 @@ public class Network extends Thread {
     private static Transactions[] outGoingPacket;              /* Outgoing network buffer */
     private static String inBufferStatus, outBufferStatus;     /* Current status of the network buffers - normal, full, empty */
     private static String networkStatus;                       /* Network status - active, inactive */
-    private static Semaphore semaphoreInput; /* Semaphore for Input Buffer */
-    private static Semaphore semaphoreOutput; /* Semaphore for Output Buffer */
-
+    private static Semaphore semIncomingPacket, semOutgoingPacket, semSendingEmpty, semReceivingFull, semTransferInFull, semTransferOutEmpty;
     /**
      * Constructor of the Network class
      *
@@ -57,9 +55,16 @@ public class Network extends Thread {
         inputIndexServer = 0;
         outputIndexServer = 0;
         outputIndexClient = 0;
-        semaphoreInput = new Semaphore(1);
-        semaphoreOutput = new Semaphore(1);
         networkStatus = "active";
+
+        semIncomingPacket = new Semaphore(1); // Locks the incoming packet array
+        semOutgoingPacket = new Semaphore(1); // Locks the outgoing packet array
+
+        semSendingEmpty = new Semaphore(maxNbPackets); // Ensures that the incoming buffer size is respected
+        semReceivingFull = new Semaphore(0); // Unlocks when not full
+
+        semTransferOutEmpty = new Semaphore(maxNbPackets); // Ensures that the outgoing buffer size is respected
+        semTransferInFull = new Semaphore(0); // Unlocks when not full
     }
 
     /**
@@ -356,6 +361,8 @@ public class Network extends Thread {
      *
      */
     public static boolean send(Transactions inPacket) throws InterruptedException {
+        semSendingEmpty.acquire();
+        semIncomingPacket.acquire();
         inComingPacket[inputIndexClient].setAccountNumber(inPacket.getAccountNumber());
         inComingPacket[inputIndexClient].setOperationType(inPacket.getOperationType());
         inComingPacket[inputIndexClient].setTransactionAmount(inPacket.getTransactionAmount());
@@ -363,18 +370,18 @@ public class Network extends Thread {
         inComingPacket[inputIndexClient].setTransactionError(inPacket.getTransactionError());
         inComingPacket[inputIndexClient].setTransactionStatus("transferred");
 
-        System.out.println("\n DEBUG : Network.send() - index inputIndexClient " + inputIndexClient);
-        System.out.println("\n DEBUG : Network.send() - account number " + inComingPacket[inputIndexClient].getAccountNumber());
+        //System.out.println("\n DEBUG : Network.send() - index inputIndexClient " + inputIndexClient);
+        //System.out.println("\n DEBUG : Network.send() - account number " + inComingPacket[inputIndexClient].getAccountNumber());
 
-        semaphoreInput.acquire();
         setinputIndexClient(((getinputIndexClient( ) + 1) % getMaxNbPackets ()));	/* Increment the input buffer index  for the client */
         /* Check if input buffer is full */
         if (getinputIndexClient() == getoutputIndexServer()) {
             setInBufferStatus("full");
-            System.out.println("\n DEBUG : Network.send() - inComingBuffer status " + getInBufferStatus());
+            //System.out.println("\n DEBUG : Network.send() - inComingBuffer status " + getInBufferStatus());
         } else
             setInBufferStatus("normal");
-        semaphoreInput.release();
+        semIncomingPacket.release();
+        semTransferInFull.release();
         return true;
     }
 
@@ -384,6 +391,8 @@ public class Network extends Thread {
      *
      */
     public static boolean receive(Transactions outPacket) throws InterruptedException {
+        semReceivingFull.acquire();
+        semOutgoingPacket.acquire();
         outPacket.setAccountNumber(outGoingPacket[outputIndexClient].getAccountNumber());
         outPacket.setOperationType(outGoingPacket[outputIndexClient].getOperationType());
         outPacket.setTransactionAmount(outGoingPacket[outputIndexClient].getTransactionAmount());
@@ -391,18 +400,18 @@ public class Network extends Thread {
         outPacket.setTransactionError(outGoingPacket[outputIndexClient].getTransactionError());
         outPacket.setTransactionStatus("done");
 
-        System.out.println("\n DEBUG : Network.receive() - index outputIndexClient " + outputIndexClient);
-        System.out.println("\n DEBUG : Network.receive() - account number " + outPacket.getAccountNumber());
+        //System.out.println("\n DEBUG : Network.receive() - index outputIndexClient " + outputIndexClient);
+        //System.out.println("\n DEBUG : Network.receive() - account number " + outPacket.getAccountNumber());
 
-        semaphoreOutput.acquire();
         setoutputIndexClient(((getoutputIndexClient( ) + 1) % getMaxNbPackets( ))); /* Increment the output buffer index for the client */
         /* Check if output buffer is empty */
         if ( getoutputIndexClient( ) == getinputIndexServer( )) {
             setOutBufferStatus("empty");
-            System.out.println("\n DEBUG : Network.receive() - outGoingBuffer status " + getOutBufferStatus());
+            //System.out.println("\n DEBUG : Network.receive() - outGoingBuffer status " + getOutBufferStatus());
         } else
             setOutBufferStatus("normal");
-        semaphoreOutput.release();
+        semOutgoingPacket.release();
+        semTransferOutEmpty.release();
         return true;
     }
 
@@ -414,6 +423,8 @@ public class Network extends Thread {
      *
      */
     public static boolean transferOut(Transactions outPacket) throws InterruptedException {
+        semTransferOutEmpty.acquire();
+        semOutgoingPacket.acquire();
         outGoingPacket[inputIndexServer].setAccountNumber(outPacket.getAccountNumber());
         outGoingPacket[inputIndexServer].setOperationType(outPacket.getOperationType());
         outGoingPacket[inputIndexServer].setTransactionAmount(outPacket.getTransactionAmount());
@@ -421,19 +432,19 @@ public class Network extends Thread {
         outGoingPacket[inputIndexServer].setTransactionError(outPacket.getTransactionError());
         outGoingPacket[inputIndexServer].setTransactionStatus("transferred");
 
-        System.out.println("\n DEBUG : Network.transferOut() - index inputIndexServer " + inputIndexServer);
-        System.out.println("\n DEBUG : Network.transferOut() - account number " + outGoingPacket[inputIndexServer].getAccountNumber());
+        //System.out.println("\n DEBUG : Network.transferOut() - index inputIndexServer " + inputIndexServer);
+        //System.out.println("\n DEBUG : Network.transferOut() - account number " + outGoingPacket[inputIndexServer].getAccountNumber());
 
-        semaphoreOutput.acquire();
         setinputIndexServer(((getinputIndexServer() + 1) % getMaxNbPackets())); /* Increment the output buffer index for the server */
         /* Check if output buffer is full */
         if ( getinputIndexServer( ) == getoutputIndexClient( )) {
             setOutBufferStatus("full");
-            System.out.println("\n DEBUG : Network.transferOut() - outGoingBuffer status " + getOutBufferStatus());
+            //System.out.println("\n DEBUG : Network.transferOut() - outGoingBuffer status " + getOutBufferStatus());
         }
         else
             setOutBufferStatus("normal");
-        semaphoreOutput.release();
+        semOutgoingPacket.release();
+        semReceivingFull.release();
         return true;
     }
 
@@ -444,7 +455,9 @@ public class Network extends Thread {
      *
      */
     public static boolean transferIn(Transactions inPacket) throws InterruptedException {
-        System.out.println("\n DEBUG : Network.transferIn - account number " + inComingPacket[outputIndexServer].getAccountNumber());
+        semTransferInFull.acquire();
+        semIncomingPacket.acquire();
+        //System.out.println("\n DEBUG : Network.transferIn - account number " + inComingPacket[outputIndexServer].getAccountNumber());
         inPacket.setAccountNumber(inComingPacket[outputIndexServer].getAccountNumber());
         inPacket.setOperationType(inComingPacket[outputIndexServer].getOperationType());
         inPacket.setTransactionAmount(inComingPacket[outputIndexServer].getTransactionAmount());
@@ -452,19 +465,19 @@ public class Network extends Thread {
         inPacket.setTransactionError(inComingPacket[outputIndexServer].getTransactionError());
         inPacket.setTransactionStatus("received");
 
-        System.out.println("\n DEBUG : Network.transferIn() - index outputIndexServer " + outputIndexServer);
-        System.out.println("\n DEBUG : Network.transferIn() - account number " + inPacket.getAccountNumber());
+        //System.out.println("\n DEBUG : Network.transferIn() - index outputIndexServer " + outputIndexServer);
+        //System.out.println("\n DEBUG : Network.transferIn() - account number " + inPacket.getAccountNumber());
 
-        semaphoreInput.acquire();
         setoutputIndexServer(((getoutputIndexServer() + 1) % getMaxNbPackets()));	/* Increment the input buffer index for the server */
         /* Check if input buffer is empty */
         if ( getoutputIndexServer( ) == getinputIndexClient( )) {
             setInBufferStatus("empty");
-            System.out.println("\n DEBUG : Network.transferIn() - inComingBuffer status " + getInBufferStatus());
+            //System.out.println("\n DEBUG : Network.transferIn() - inComingBuffer status " + getInBufferStatus());
         }
         else
             setInBufferStatus("normal");
-        semaphoreInput.release();
+        semIncomingPacket.release();
+        semSendingEmpty.release();
         return true;
     }
 
@@ -520,10 +533,10 @@ public class Network extends Thread {
      * @param
      */
     public void run() {
-        System.out.println("\n DEBUG : Network.run() - starting network thread");
+        //System.out.println("\n DEBUG : Network.run() - starting network thread");
         while (!clientConnectionStatus.equals("disconnected") && !serverConnectionStatus.equals("disconnected")){
             Thread.yield();
         }
-        System.out.println("\n DEBUG : Network.run() - stopping network thread");
+        //System.out.println("\n DEBUG : Network.run() - stopping network thread");
     }
 }

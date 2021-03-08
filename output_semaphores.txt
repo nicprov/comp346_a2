@@ -1,4 +1,4 @@
-/home/nicolas/.jdks/openjdk-15.0.2/bin/java -javaagent:/snap/intellij-idea-community/273/lib/idea_rt.jar=46553:/snap/intellij-idea-community/273/bin -Dfile.encoding=UTF-8 -classpath /mnt/Public/Mega/Concordia/Winter 2021/Comp 346/comp346_a2/out/production/comp346_a2 com.concordia.Driver
+/home/nicolas/.jdks/openjdk-15.0.2/bin/java -javaagent:/snap/intellij-idea-community/273/lib/idea_rt.jar=36193:/snap/intellij-idea-community/273/bin -Dfile.encoding=UTF-8 -classpath /mnt/Public/Mega/Concordia/Winter 2021/Comp 346/comp346_a2/out/production/comp346_a2 com.concordia.Driver
 
  Activating the network ...
 
@@ -34,6 +34,8 @@
 
  Account number 73745 Account Balance 100.0 Message done
 
+ Account number 92012 Account Balance 750.0 Message done
+
  Account number 81514 Account Balance -200.0 Message done
 
  Account number 52853 Account Balance 1000.0 Message done
@@ -43,8 +45,6 @@
  Account number 58342 Account Balance 0.0 Message done
 
  Account number 62080 Account Balance 100.0 Message done
-
- Account number 92012 Account Balance 750.0 Message done
 
  Account number 21638 Account Balance -1000.0 Message done
 
@@ -64,15 +64,15 @@
 
  Account number 51728 Account Balance -800.0 Message done
 
- Account number 60520 Account Balance -35.0 Message done
+ Account number 60520 Account Balance 1100.0 Message done
+
+ Account number 60520 Account Balance 1000.0 Message done
 
  Account number 43902 Account Balance 1000.0 Message done
 
  Account number 52521 Account Balance 7000.0 Message done
 
  Account number 31215 Account Balance 2000.0 Message done
-
- Account number 60520 Account Balance 1100.0 Message done
 
  Account number 41024 Account Balance 1500.0 Message done
 
@@ -84,7 +84,7 @@
 
  Account number 82411 Account Balance -400.0 Message done
 
- Account number 22310 Account Balance -30.0 Message done
+ Account number 22310 Account Balance 100.0 Message done
 
  Account number 21117 Account Balance 100.0 Message done
 
@@ -92,7 +92,7 @@
 
  Account number 31820 Account Balance 1000.0 Message done
 
- Account number 22310 Account Balance 100.0 Message done
+ Account number 22310 Account Balance 50.0 Message done
 
  Account number 32613 Account Balance 3000.0 Message done
 
@@ -104,7 +104,9 @@
 
  Account number 11314 Account Balance 1000.0 Message done
 
- Account number 91715 Account Balance -85.0 Message done
+ Account number 91715 Account Balance 100.0 Message done
+
+ Account number 91715 Account Balance -50.0 Message done
 
  Account number 00812 Account Balance 1620.0 Message done
 
@@ -123,8 +125,6 @@
  Account number 01823 Account Balance 860.0 Message done
 
  Account number 13331 Account Balance 1500.0 Message done
-
- Account number 91715 Account Balance 100.0 Message done
 
  Account number 81368 Account Balance 350.0 Message done
 
@@ -154,18 +154,20 @@
 
  Account number 61612 Account Balance 25.0 Message done
 
- Terminating client send thread -  Running time 247 milliseconds
+ Terminating client send thread -  Running time 319 milliseconds
 
  Account number 92018 Account Balance 100.0 Message done
 
- Terminating server thread1 -  Running time 354 milliseconds
-
  Account number 61612 Account Balance 100.0 Message done
 
- Terminating server thread2 -  Running time 357 milliseconds
+ Terminating client receive thread -  Running time 414 milliseconds
+
+ Terminating server thread1 -  Running time 439 milliseconds
 
  Disconnecting server from network
 
- Terminating client receive thread -  Running time 338 milliseconds
+ Terminating server thread2 -  Running time 439 milliseconds
+
+ Disconnecting server from network
 
 Process finished with exit code 0
