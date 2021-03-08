@@ -280,10 +280,10 @@ public class Server extends Thread {
      * @return balance
      * @param i, amount
      */
-    public synchronized double deposit(int i, double amount)
+    public double deposit(int i, double amount)
     {
         double curBalance;      /* Current account balance */
-        synchronized (account[i]){
+        synchronized (account[i]){ /* Synchronized the block instead of the method to allow control over access to every object instance of account[i], this ensures that the entire account object is synchronized across deposit, withdraw and query */
             curBalance = account[i].getBalance( );          /* Get current account balance */
 
             /* NEW : A server thread is blocked before updating the 10th , 20th, ... 70th account balance in order to simulate an inconsistency situation */
